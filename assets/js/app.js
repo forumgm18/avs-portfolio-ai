@@ -292,7 +292,6 @@ async function init() {
   document.querySelector('[data-slot="cards"]')?.replaceChildren(...data.cases.map(renderCard));
   const details = data.cases.map((c, i) => [c, i]).filter(([c]) => !only || only.includes(c.slug));
   document.querySelector('[data-slot="cases"]')?.replaceChildren(...details.map(([c, i]) => renderCase(c, i)));
-  document.querySelectorAll('[data-slot="method"]').forEach((el) => { el.textContent = data.profile.method; });
   if (location.hash) document.querySelector(location.hash)?.scrollIntoView();
 }
 
