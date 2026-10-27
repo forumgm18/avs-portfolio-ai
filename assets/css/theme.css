@@ -1,0 +1,102 @@
+/* Тема: тёмный тех-минимализм (моно-метки, неоновый акцент, сетка на фоне) + светлый вариант.
+   По умолчанию — тема системы; переключатель ставит data-theme на <html> и запоминает выбор. */
+
+:root {
+  --font: 'Manrope', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --radius-sm: 6px; --radius: 10px; --radius-lg: 14px;
+
+  --bg: #090b0f;
+  --topbar-bg: rgba(9, 11, 15, .8);
+  --surface: #10141b;
+  --surface-2: #161b24;
+  --border: #222a36;
+  --text: #e7eaf0;
+  --muted: #8a93a4;
+  --accent: #4ff0a8;
+  --accent-ink: #03140c;
+  --accent-text: #4ff0a8;
+  --metric: #4ff0a8;
+  --effect-bg: rgba(79, 240, 168, .06);
+  --shadow: 0 10px 40px rgba(79, 240, 168, .08);
+  --grid-line: rgba(255, 255, 255, .035);
+  --wf-bg: #0c0f14;
+  --wf-sticky: rgba(79, 240, 168, .04);
+  --wf-edge: #3a4456;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --bg: #f4f6f8;
+    --topbar-bg: rgba(244, 246, 248, .85);
+    --surface: #ffffff;
+    --surface-2: #eef1f5;
+    --border: #dbe1e8;
+    --text: #0f141b;
+    --muted: #5b6575;
+    --accent: #0ea86b;
+    --accent-ink: #ffffff;
+    --accent-text: #0b8a58;
+    --metric: #0b8a58;
+    --effect-bg: rgba(14, 168, 107, .07);
+    --shadow: 0 10px 30px rgba(15, 20, 27, .08);
+    --grid-line: rgba(15, 20, 27, .045);
+    --wf-bg: #f7f9fb;
+    --wf-sticky: rgba(14, 168, 107, .05);
+    --wf-edge: #b4bdc9;
+    color-scheme: light;
+  }
+}
+
+:root[data-theme='light'] {
+  --bg: #f4f6f8;
+  --topbar-bg: rgba(244, 246, 248, .85);
+  --surface: #ffffff;
+  --surface-2: #eef1f5;
+  --border: #dbe1e8;
+  --text: #0f141b;
+  --muted: #5b6575;
+  --accent: #0ea86b;
+  --accent-ink: #ffffff;
+  --accent-text: #0b8a58;
+  --metric: #0b8a58;
+  --effect-bg: rgba(14, 168, 107, .07);
+  --shadow: 0 10px 30px rgba(15, 20, 27, .08);
+  --grid-line: rgba(15, 20, 27, .045);
+  --wf-bg: #f7f9fb;
+  --wf-sticky: rgba(14, 168, 107, .05);
+  --wf-edge: #b4bdc9;
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.topbar__logo, .hero__eyebrow, .case__num, .card__num, .tags, .case__label,
+.metric__value, .btn__label, .chip, .lightbox__caption, .dialog__title {
+  font-family: var(--mono);
+}
+
+.topbar__logo::before { content: '~/'; color: var(--accent-text); }
+.hero__eyebrow::before { content: '> '; color: var(--accent-text); }
+.hero__name { font-weight: 800; letter-spacing: -.02em; }
+.hero__role { font-family: var(--mono); font-size: clamp(15px, 1.8vw, 19px); font-weight: 500; }
+
+.hero__metrics .metric {
+  padding: 18px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.section__title::before { content: '// '; color: var(--accent-text); font-family: var(--mono); font-weight: 400; }
+.tags li::before { content: '#'; color: var(--accent-text); }
+.case__num { font-size: 13px; color: var(--accent-text); }
+.case__num::before { content: 'case_'; color: var(--muted); }
+.card__num::before { content: 'case_'; }
+.chip { font-size: 12px; }
+.metric__value { font-weight: 600; letter-spacing: -.02em; }

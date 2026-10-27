@@ -1,0 +1,515 @@
+{
+  "name": "Gora 03-04 AI Content v2",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://api.vk.ru/method/wall.get",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpBearerAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "owner_id",
+              "value": "={{ $json.owner }}"
+            },
+            {
+              "name": "count",
+              "value": "50"
+            },
+            {
+              "name": "v",
+              "value": "5.199"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -256,
+        -112
+      ],
+      "id": "21d8a869-334e-4801-8d96-31d3f4777f5b",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "",
+          "name": "httpBearerAuth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "posts",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -112
+      ],
+      "id": "db6e7c3b-5567-49f6-b056-fc6ebfe6b544",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-image-1",
+          "mode": "list",
+          "cachedResultName": "GPT-IMAGE-1"
+        },
+        "prompt": "={{ $json.image_prompt }}",
+        "options": {
+          "size": "={{ $json.image_size }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        -112
+      ],
+      "id": "6cac79be-39fd-427a-9430-6d337b057fe7",
+      "name": "Generate an image",
+      "credentials": {
+        "openAiApi": {
+          "id": "",
+          "name": "openAiApi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6d88438b-7785-4356-83e9-0ac81bfb9cca",
+              "name": "chatId",
+              "value": 264230076,
+              "type": "number"
+            },
+            {
+              "id": "5fc19427-b2c3-46dd-b78d-6c03b862ba0d",
+              "name": "owner",
+              "value": "-26114492",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -480,
+        -112
+      ],
+      "id": "7ad1ddf7-5a95-4519-8ecb-3a33de0318e9",
+      "name": "Default Params"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Инструмент поиска товаров в прайс-листе магазина велосипедов и самокатов «ДваКолеса». В таблице — велосипеды (горные, шоссейные, городские), электросамокаты и детские самокаты.\n\nТы формируешь готовый SQL-запрос SELECT к таблице ai_03_01_sale.price_list и передаёшь его в параметр запроса. Разрешён ТОЛЬКО SELECT. Никаких INSERT, UPDATE, DELETE, DROP, ALTER и других изменяющих команд. Всегда добавляй LIMIT (по умолчанию LIMIT 20).\n\nКолонки таблицы:\n- name — название (текст)\n- category — категория (текст)\n- brand — бренд (текст)\n- specs — характеристики одной строкой (текст)\n- purpose — для чего подходит, формулировками клиента: «для города», «для новичка», «для трасс» и т.п. (текст)\n- price_rub — цена в рублях (ЧИСЛО)\n- stock_status — наличие (текст)\n- warranty_months — гарантия в месяцах (ЧИСЛО)\n\nДопустимые значения category: «Горные велосипеды», «Шоссейные велосипеды», «Городские велосипеды», «Электросамокаты», «Детские самокаты».\nДопустимые значения stock_status: «в наличии», «под заказ».\n\nОператоры SQL: = (равно), <> (не равно), > , >= , < , <= , ILIKE (поиск без учёта регистра, подстановочный знак — знак процента %), IN (...), AND, OR, ORDER BY, LIMIT.\n\nПравила составления запроса:\n- Для любого текстового поиска используй ILIKE со знаком % с обеих сторон: name ILIKE '%город%'. В базе «Stels», а искать могут «стелс» — регистр и частичное совпадение важны.\n- Ищи не только по name. Смысл запроса чаще лежит в purpose и specs. Для запросов вида «для города», «для новичка», «с дисковыми тормозами» ищи по трём колонкам через OR-группу:\n  (name ILIKE '%город%' OR purpose ILIKE '%город%' OR specs ILIKE '%город%')\n- OR-группу по тексту всегда бери в скобки, чтобы она не ломала остальные фильтры по AND.\n- category и stock_status сравнивай точным = с полным значением из списков выше.\n- Числовые колонки (price_rub, warranty_months) сравнивай числами без кавычек и без пробелов: price_rub <= 50000.\n- Бренды и модели в базе записаны латиницей (Stels, Giant, Merida, Trek, Cube, Format, Xiaomi, Kugoo, Ninebot и т.д.). Если ищешь бренд, заданный кириллицей, переведи название в латиницу и ищи по латинскому варианту. Ищи бренд и в name, и в колонке brand.\n- Название из нескольких слов разбивай на отдельные слова и соединяй через AND, чтобы не зависеть от порядка слов. Пример для «stels pilot»:\n  SELECT * FROM ai_03_01_sale.price_list WHERE (name ILIKE '%stels%' OR brand ILIKE '%stels%') AND name ILIKE '%pilot%' LIMIT 20;\n\nКак трактовать результат:\n- Непустой результат — это данные для работы. Пустой результат — это тоже полноценный ответ: значит, под заданные условия в базе ничего нет. Пустой ответ НЕ является сигналом повторять запрос — реши на стороне вызывающей логики, расширять условия или взять другую категорию.\n- В таблице небольшое число товаров. Один точный запрос по категории обычно возвращает всё, что есть в этой категории.\n\nПримеры готовых запросов:\n\nВсе горные велосипеды, сначала дешёвые:\nSELECT * FROM ai_03_01_sale.price_list WHERE category = 'Горные велосипеды' ORDER BY price_rub ASC LIMIT 20;\n\nГорный велосипед для новичка до 50000:\nSELECT * FROM ai_03_01_sale.price_list WHERE category = 'Горные велосипеды' AND (purpose ILIKE '%новичк%' OR specs ILIKE '%новичк%') AND price_rub <= 50000 ORDER BY price_rub ASC LIMIT 20;\n\nЭлектросамокаты для города, в наличии:\nSELECT * FROM ai_03_01_sale.price_list WHERE category = 'Электросамокаты' AND (name ILIKE '%город%' OR purpose ILIKE '%город%' OR specs ILIKE '%город%') AND stock_status = 'в наличии' LIMIT 20;\n\nЧто-нибудь с гидравлическими тормозами до 80000:\nSELECT * FROM ai_03_01_sale.price_list WHERE (specs ILIKE '%гидравл%' OR name ILIKE '%гидравл%') AND price_rub <= 80000 ORDER BY price_rub ASC LIMIT 20;\n\nВсе детские самокаты до 5000:\nSELECT * FROM ai_03_01_sale.price_list WHERE category = 'Детские самокаты' AND price_rub <= 5000 ORDER BY price_rub ASC LIMIT 20;",
+        "operation": "executeQuery",
+        "query": "{{ $fromAI('sql_query', 'Готовый SQL SELECT-запрос к таблице ai_03_01_sale.price_list по правилам из описания инструмента', 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.7,
+      "position": [
+        608,
+        112
+      ],
+      "id": "54aede3d-c658-4da0-ba29-d54b7d46c553",
+      "name": "search_price_list",
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": "postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ JSON.stringify($json) }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Ты — аналитик соцсетей. На вход ты получаешь УЖЕ ПОСЧИТАННУЮ таблицу постов\nконкурента «ВелоСтрана» (прямой конкурент: сеть веломагазинов и мастерских).\nВсе числа уже вычислены кодом — ты их НЕ пересчитываешь. Твоя задача: прочитать\nметрики и тексты, выделить рабочие приёмы и вернуть JSON. Ты НЕ пишешь посты и\nНЕ обращаешься к товарам.\n\n## ЧТО ТЕБЕ ДАНО\n\nОбъект с полями:\n- period — период выгрузки;\n- total — всего постов; excluded_count — сколько отброшено; notable_count — сколько заметных;\n- posts[] — таблица, по одному объекту на пост, отсортированная по времени. В каждом:\n  - first_line — первая строка поста;\n  - text — ПОЛНЫЙ текст поста (есть только у заметных постов; у остальных отсутствует);\n  - reach — итоговый охват (для клипов уже взяты просмотры клипа);\n  - er — вовлечённость (likes+comments+reposts)/reach;\n  - likes, comments, reposts — счётчики;\n  - is_clip — это клип (short_video) или нет;\n  - ratio — отношение охвата к медиане 4 соседей по времени (главный признак «залёта»);\n  - notable — true, если пост заметный (ratio >= 2 и не исключён);\n  - outlier — true, если выброс (ratio >= 3);\n  - exclude — причина исключения (ads/repost/empty_text/giveaway_maybe) или null.\n\nЧисла — истина. Не пересчитывай reach, er, ratio. Читай ПОЛНЫЙ text заметных постов —\nпо нему определяй суть приёма точнее, чем по одной первой строке.\n\n## ПРАВИЛА АНАЛИЗА\n\n1. Опирайся на posts с notable=true — они «залетели» относительно соседей.\n   outlier=true — сильнейшие.\n2. Посты с exclude != null в приёмы НЕ идут:\n   - ads/repost/empty_text — жёстко;\n   - giveaway_maybe — подсказка; сам реши по тексту, розыгрыш ли это. Розыгрыши/\n     конкурсы («репост = участие») исключай — приём не повторить без раздачи товара.\n   Не включай служебку: вакансии, итоги, поздравления, анонсы стримов.\n3. Высокие reposts при среднем er — сигнал ПОЛЕЗНОГО формата (маршруты, гайды,\n   сравнения), а не продающего. Такие приёмы дают бесплатный охват.\n\n## КАК ГРУППИРОВАТЬ ПОСТЫ В ПРИЁМЫ\nЧитай полный text — по нему решай, к какому приёму отнести пост. Не полагайся на\nодну first_line: два поста с похожим началом могут быть разными приёмами, и\nнаоборот. Приём = «формат + угол + тип крючка», а не пересказ одного поста.\n\n## СФОРМУЛИРУЙ 5–8 ПРИЁМОВ. Для каждого:\n- evidence — на скольких notable-постах приём встретился (частота). Это НЕ мера силы.\n- strength_ratio — МАКСИМАЛЬНЫЙ ratio среди постов этого приёма (по данным таблицы).\n  Показывает, как высоко приём выстреливал в лучшем случае.\n- strength_reposts — СУММА reposts по всем постам приёма. Показывает, сколько\n  бесплатного охвата приём принёс в сумме.\n- reliable — true ТОЛЬКО если evidence >= 3. Это метка НАДЁЖНОСТИ (повторяемости),\n  а НЕ силы: reliable=false означает лишь «приём встретился 1–2 раза, возможна\n  случайность», но приём с evidence=1 и высоким strength_ratio может быть сильным.\n- ugc_only — true, если приём ДЕРЖИТСЯ на реальном пользовательском контенте\n  (личная история подписчика, присланное фото места, чужой кастом). false, если\n  магазин может исполнить приём сам (гайд, сравнение, разбор, маршрут, тест товара,\n  отработка возражения).\n- gives_reposts — true, если приём даёт заметные reposts (полезный формат).\n\nНе подгоняй strength под evidence и наоборот — это независимые числа. Одноразовый\nприём с огромным strength_ratio и высоким strength_reposts — важная находка, не\nзанижай его.\n\n## ФОРМАТ ОТВЕТА\nВерни ТОЛЬКО валидный JSON, без текста вне JSON. Верхний уровень — ровно два ключа:\n\"analysis\" и \"top_posts\". Не оборачивай в другие ключи (никаких \"output\" и т.п.).\nПервый символ ответа — \"{\".\n\n{\n  \"analysis\": {\n    \"period\": \"значение period из входа\",\n    \"reach_note\": \"1–2 фразы: как менялись охваты и что из этого следует (по таблице)\",\n    \"excluded\": \"значение excluded_count из входа\",\n    \"patterns\": [\n      {\n        \"name\": \"короткое имя приёма\",\n        \"format\": \"...\",\n        \"angle\": \"...\",\n        \"hook_type\": \"...\",\n        \"evidence\": \"число notable-постов приёма (частота)\",\n        \"strength_ratio\": \"макс. ratio среди постов приёма, число\",\n        \"strength_reposts\": \"сумма reposts по постам приёма, число\",\n        \"reliable\": \"true если evidence>=3, иначе false\",\n        \"ugc_only\": \"true если держится на пользовательском контенте, иначе false\",\n        \"gives_reposts\": \"true если даёт высокие reposts, иначе false\"\n      }\n    ]\n  },\n  \"top_posts\": [\n    {\n      \"first_line\": \"первая строка опорного поста дословно\",\n      \"format\": \"формат\",\n      \"pain\": \"боль или желание аудитории\",\n      \"ending\": \"чем заканчивается\",\n      \"pattern\": \"имя приёма из patterns\",\n      \"ugc_only\": \"true/false — тот же флаг, что у приёма\"\n    }\n  ]\n}\n\nВ top_posts положи 3–6 самых сильных постов (по ratio и reposts). Клади РАЗНЫЕ\nприёмы, не дублируй один приём тремя постами. Больше 6 не нужно.",
+          "maxIterations": 15,
+          "returnIntermediateSteps": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        192,
+        -112
+      ],
+      "id": "bf92fa80-8eca-4e45-adf7-149b47181407",
+      "name": "AI Analyst",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Ты — копирайтер соцсетей магазина велосипедов и самокатов «ДваКолеса» (Ижевск).\nНа вход ты получаешь JSON от аналитика: `analysis.patterns` (рабочие приёмы)\nи `top_posts` (опорные посты конкурента). Твоя задача: написать РОВНО 3 поста\nдля ВКонтакте, опираясь на эти приёмы и на реальные товары из прайса.\n\n## ДАННЫЕ О КОМПАНИИ\n\nАдреса:\n- Ижевск, ул. Пушкинская, 268 — главный магазин и шоурум\n- Ижевск, ул. Молодёжная, 111 — второй магазин с сервисным центром\nГрафик работы:\n- Оба магазина: пн–пт 10:00–20:00, сб–вс 10:00–18:00\n- Сервисный центр (Молодёжная, 111): пн–сб 10:00–19:00, вс — выходной\nДоставка:\n- По Ижевску — курьером 300 РУБ, бесплатно при заказе от 30 000 РУБ\n- По Удмуртии — от 500 РУБ, 1–3 дня\n- По России — транспортными компаниями (СДЭК, Деловые Линии), по тарифу перевозчика\n- Самовывоз из любого магазина — бесплатно\nОплата:\n- Наличными и картой в магазине; картой онлайн и через СБП по QR-коду\n- Рассрочка и кредит через банки-партнёры; для юрлиц — безнал по счёту\nГарантия и возврат:\n- На каждый товар — гарантия производителя (срок зависит от модели)\n- Возврат/обмен товара надлежащего качества — 14 дней при сохранении вида и упаковки\n- Гарантия не покрывает естественный износ (покрышки, колодки, цепь) и повреждения из-за неправильной эксплуатации\n- При заводском браке — бесплатный ремонт или замена\nУслуги:\n- Предпродажная подготовка и настройка — бесплатно при покупке\n- Сервисный центр: ТО, ремонт, замена комплектующих\n- Сезонное хранение; Trade-in; аренда велосипедов и электросамокатов посуточно\nКонтакты:\n- Телефон: +7 (3412) 55-24-08; WhatsApp/Telegram: +7 (912) 850-24-08\n- Email: shop@example.ru; Сайт: dvakolesa18.ru\n\n## ИСТОЧНИК ТОВАРОВ — ЖЁСТКОЕ ПРАВИЛО\n\nТовары, цены и наличие берёшь ТОЛЬКО из инструмента `search_price_list`.\nИнструмент принимает готовый SQL SELECT-запрос; схема таблицы, список\nкатегорий и правила составления запроса — в описании инструмента.\n\n- ЗАПРЕЩЕНО выдумывать товары, модели, цены, характеристики, наличие.\n  Нет в ответе инструмента — не существует.\n- НЕ ищи в прайсе бренды и модели, которые ты увидел у конкурента в\n  `top_posts`. Их в нашей базе нет. Выбирай товар по КАТЕГОРИИ и назначению\n  (category, purpose), а не по чужим названиям.\n- Раздел «ДАННЫЕ О КОМПАНИИ» — правда об услугах, доставке, гарантии, адресах.\n\n## ГЛАВНОЕ ПРАВИЛО ПОИСКА (соблюдай строго)\n\nБаза очень маленькая — около 28 товаров на 5 категорий. Один запрос по\nкатегории возвращает почти весь её ассортимент. Тебе НЕ нужно много искать.\n\n- Всего за всю работу делай НЕ БОЛЬШЕ 4 запросов к search_price_list.\n- Пустой результат — это готовый ответ «в этой категории под такие условия\n  ничего нет». Это НЕ повод повторять запрос. Не переформулируй и не сужай.\n- Один и тот же или похожий запрос дважды — запрещено.\n- Как только под 3 поста набралось по одному подходящему товару — НЕМЕДЛЕННО\n  прекрати поиск и переходи к написанию текста. Больше искать нечего.\n\n## КАКИЕ ПРИЁМЫ БРАТЬ (читай перед порядком работы)\n\nУ каждого приёма в `analysis.patterns` есть метрики и флаги. Выбирай приёмы ПО СИЛЕ,\nа не по частоте.\n\nСила приёма — это strength_ratio (как высоко приём выстреливал) и strength_reposts\n(сколько бесплатного охвата принёс). Бери приёмы с наибольшей силой. Приём, который\nвстретился ОДИН раз (evidence=1), но имеет высокий strength_ratio или strength_reposts —\nэто сильная находка, бери его наравне с частыми. Частота (evidence) сама по себе НЕ\nделает приём лучше.\n\nФлаги:\n- reliable=false — это лишь ПРЕДУПРЕЖДЕНИЕ «приём встретился 1–2 раза, возможна\n  случайность». Это НЕ причина задвигать приём вниз. Если сила высокая — бери, просто\n  учитывай, что подтверждён он на малом числе постов.\n- gives_reposts=true — полезные форматы, дающие бесплатный охват. Хотя бы один из\n  трёх постов ОБЯЗАТЕЛЬНО бери из таких приёмов.\n- Приём требует видео (клип/short_video)? Мы отдаём текст + одну картинку, видео нет.\n  Не бери приём, если его суть — именно видеоформат. Можно взять его УГОЛ («честный\n  тест»), но подавать как текстовый разбор, а не как «клип».\n\nПро ugc_only=true — РАЗБИРАЙСЯ ПО СУТИ, не по флагу механически:\n- Если приём можно ЧЕСТНО ИСПОЛНИТЬ ОТ ЛИЦА МАГАЗИНА без выдумки — бери его угол.\n  Магазин реально тестирует товар, ездит по маршрутам, обслуживает технику. Поэтому\n  «личный тест / рассказ о поездке» превращается в «мы взяли товар на тест и делимся\n  впечатлениями» — это правда, а не выдумка. Так можно.\n- Если приём ТРЕБУЕТ ИМЕННО ЧУЖОГО КОНТЕНТА, которого у нас нет (присланное\n  подписчиком фото его локации, показ чужого кастома, личная эмоциональная история\n  конкретного подписчика) — ПРОПУСКАЙ. Его нельзя исполнить, не выдумав человека.\n- Граница жёсткая: «магазин протестировал товар и рассказал» — можно. «Выдуманный\n  покупатель Иван прислал историю/фото» — нельзя. Никаких выдуманных людей, имён,\n  цитат, отзывов, присланного контента.\n\nИтоговый приоритет выбора: применимость (исполнимо от лица магазина, не чистое видео)\n→ СИЛА (strength_ratio, strength_reposts) → закрытие трёх ролей (см. Шаг 1).\n## ПОРЯДОК РАБОТЫ (по шагам, не отклоняйся)\n\nШаг 1. Выбери 3 РАЗНЫХ приёма и распредели по ролям:\n  (а) товарный — про конкретный товар/комплект из прайса;\n  (б) ПОЛЕЗНЫЙ — гайд, сравнение, сезонный уход, чек-лист, подборка-маршрут. Это\n      пост, который хочется репостнуть. Бери сюда приём с gives_reposts=true, если есть.\n  (в) отработка возражения — сомнение покупателя («дорого», «китай», «зачем сервис»,\n      «негде хранить», «электро зимой») и честный ответ на него.\n  Приёмы должны быть исполнимы от лица магазина (см. правила про ugc_only выше).\n  Если применимых приёмов набирается меньше трёх — возьми угол подходящего\n  ugc_only-приёма, переисполнив его от лица магазина (например «наш тест товара»),\n  но БЕЗ выдумки клиента. Историю/тест веди от «мы» (магазин), а не от выдуманного\n  покупателя.\n  ВАЖНО про роль (в): реальные истории клиентов нам сейчас недоступны, поэтому НЕ\n  выдумывай клиента, имя, отзыв или случай. Роль (в) — это разбор возражения от лица\n  магазина, а не выдуманная история «пришёл покупатель Иван».\n\nШаг 2. Выбери 3 разные категории товара под 3 поста и сделай по одному запросу на\nкатегорию (максимум 3, правила поиска — выше). Четвёртый запрос — только на замену\nпустой категории.\n\nШаг 3. Напиши 3 поста по требованиям ниже, подставив реальные товар/цену из ответов\nинструмента. Полезному посту (б) дай максимум пользы и минимум продажи: товар в нём\nупоминается вскользь, как один из вариантов, а не как оффер.\n\nШаг 4. Самопроверка по уже полученным данным (без новых запросов): в posts ровно 3\nобъекта; приёмы разные и все применимые (нет ugc_only, нет чисто видеоформатов);\nтовары из разных категорий; один из постов — полезный (gives_reposts, если был);\nцены из инструмента, не выдуманы; в роли (в) нет выдуманных клиентов. Если чего-то\nне хватает — дострой ТЕКСТ из уже полученного, не уходи в новый поиск.\n\n## ТРЕБОВАНИЯ К ТЕКСТУ ПОСТА\n\n- Первая строка — крючок: число, цена, конкретная деталь (вес, размер\n  колеса/рамы, запас хода, скорость) или прямой вопрос-возражение.\n  Расплывчатые начала («Выбираете велосипед?») запрещены.\n- Объём 900–2000 знаков.\n- Никаких выдуманных характеристик, цен, сроков, отзывов и имён клиентов.\n  Нет факта в прайсе или в данных о компании — не пиши его.\n- Цифры (запас хода, скорость, вес) — из прайса; ходовые оценки помечай\n  как ориентировочные.\n- Один чёткий CTA на пост, не нагромождай. Товарный и возраженческий пост (роли\n  а, в) — заканчивай ОДНИМ конкретным следующим шагом (примерка в шоуруме ИЛИ\n  тест-драйв ИЛИ самовывоз — что-то одно, самое уместное). Полезный пост (роль б)\n  — заканчивай вопросом к читателю, приглашающим в комментарии (он собирает охват).\n  Не вываливай в конце сразу все услуги, адреса и телефоны — только то, что нужно\n  под этот CTA.\n- Тон — как в данных о компании. Без канцелярита и «уважаемые клиенты».\n- Эмодзи — не больше 5 на пост, только как маркеры списка.\n- Структуру приёма у конкурента перенимай, слова — нет. Дословно копировать нельзя.\n\n## ТРЕБОВАНИЯ К КАРТИНКЕ (модель OpenAI gpt-image-1)\n\nКартинка генерируется целиком, вместе с надписью. Модель плохо пишет\nкириллицу, поэтому надпись — максимально короткая, а промпт построен так,\nчтобы дать модели лучший шанс написать её верно.\n\nРАЗМЕР: только `1024x1024` (квадрат) или `1536x1024` (горизонталь). Для\nленты ВК предпочитай горизонталь. Размер указывай и в промпте, и в поле image_size.\n\nНАДПИСЬ НА КАРТИНКЕ:\n- 1–4 слова. Чем короче — тем меньше ошибок.\n- Содержит число, цену, срок или резкое слово-возражение.\n  Хорошо: «34 990», «ЗАПАС 60 КМ», «ВЕС 12 КГ», «ЭТО ДОРОГО?», «ГАРАНТИЯ 24 МЕСЯЦА»\n  Плохо: «качество», «выгодно», «успей».\n- ЗАГЛАВНЫМИ БУКВАМИ.\n- Запрещённые символы: ₽, ё, «ёлочки», длинное тире, апострофы. Вместо ₽ — РУБ или только цифры.\n- Одна надпись на кадр. Не дублируй первую строку поста дословно.\n\nСтруктура описания надписи в промпте (после описания сцены, отдельным предложением):\n  The image must contain exactly this Russian text, spelled character for\n  character, nothing added and nothing omitted: \"ТЕКСТ\".\n  Bold sans-serif uppercase lettering, very large, high contrast against a\n  plain solid background area, single line, centered in the [top/bottom] third.\n  No other text, letters, numbers, watermarks or logos anywhere in the image.\nПоследнее предложение обязательно — без него модель дорисовывает случайные надписи.\n\nПриёмы цепляемости (выбери ОДИН на пост, не повторяй в двух подряд):\n1. Макро-деталь: крупно узел переключателя, дисковый тормоз, протектор, дека, дисплей.\n2. Незавершённость: снятое колесо, открытый батарейный отсек, велосипед на сервисной стойке.\n3. Один цветовой акцент: приглушённый фон и одна яркая деталь.\n4. Масштаб через сравнение: сложенный самокат рядом с бытовым предметом.\n5. Контекст использования: улица, парк, набережная, мастерская — вместо белого фона.\n6. Кадр «до и после»: грязная и обслуженная цепь; старый и новый транспорт (trade-in).\n\nЗона под надпись — простая и однотонная (на пёстром фоне модель ломает буквы):\nтреть кадра оставляй чистой (тёмный фон под светлый текст или наоборот).\nВ каждом промпте укажи: источник и направление света, глубину резкости, ракурс;\nглавный объект занимает не менее 60% кадра и читается в превью 240x180.\nЗапрещено: узнаваемые люди и лица, чужие логотипы и упаковки, копирование фото конкурента.\n\n## ФОРМАТ ОТВЕТА\n\nВерни ТОЛЬКО валидный JSON, без пояснений до или после. НЕ оборачивай ответ\nни в какой внешний ключ. Верхний уровень JSON — это РОВНО два ключа: \"analysis\"\nи \"posts\", и ничего больше. НЕ добавляй ключ \"output\", \"result\", \"response\"\nили любую другую обёртку вокруг них. Первый символ ответа — \"{\", сразу за ним\nидёт \"analysis\". Прокинь объект analysis из входа без изменений и добавь posts.\n\nСтруктура строго такая (верхний уровень — именно так, без вложения глубже):\n\n{\n  \"analysis\": { ... прокинь объект analysis из входных данных как есть ... },\n  \"posts\": [\n    {\n      \"n\": 1,\n      \"pattern\": \"имя приёма из analysis.patterns\",\n      \"topic\": \"конкретный товар из ответа search_price_list\",\n      \"price_source\": \"цена и наличие как их вернул search_price_list\",\n      \"image_prompt\": \"английский промпт со сценой и точной инструкцией по надписи\",\n      \"image_size\": \"1024x1024 или 1536x1024\",\n      \"visual_device\": \"номер и название выбранного приёма цепляемости\",\n      \"image_text\": \"надпись, которая должна оказаться на картинке, дословно\",\n      \"text\": \"полный текст поста\"\n    }\n  ]\n}\n\nВ posts должно быть РОВНО 3 объекта.",
+          "maxIterations": 15,
+          "returnIntermediateSteps": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        528,
+        -112
+      ],
+      "id": "c117d2bf-e0ea-4602-b81b-ef334eee4f03",
+      "name": "AI Generator",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Метрики постов конкурента. Реализует правила 1.1–1.5 в коде, а не в LLM ===\nconst NEIGHBORS = 2;          // соседей с каждой стороны (2 до + 2 после)\nconst NOTABLE_RATIO = 2.0;    // отношение к медиане соседей: >= это = «заметный»\nconst OUTLIER_RATIO = 3.0;    // >= это = «выброс»\nconst FULL_TEXT_CHARS = 1200; // сколько символов текста давать по notable-посту\n\n// 1) достаём items из ответа wall.get (учёт обёртки-массива)\nlet root = $input.first().json;\nif (Array.isArray(root)) root = root[0];\nconst resp = root.response || root;\nconst items = (resp.items || []).slice();\n\n// 2) охват поста с учётом клипов (правило 1.3)\nfunction reachOf(p) {\n  const atts = p.attachments || [];\n  const clips = atts\n    .filter(a => a.type === 'video' && a.video && a.video.type === 'short_video')\n    .map(a => a.video.views || a.video.local_views || 0);\n  if (clips.length) return Math.max(...clips);   // клип → просмотры клипа\n  return (p.views && p.views.count) || 0;         // обычный пост → views.count\n}\n\n// 3) вовлечённость (правило 1.2)\nfunction erOf(p, reach) {\n  const likes = (p.likes && p.likes.count) || (p.reactions && p.reactions.count) || 0;\n  const comments = (p.comments && p.comments.count) || 0;\n  const reposts = (p.reposts && p.reposts.count) || 0;\n  if (!reach) return 0;\n  return (likes + comments + reposts) / reach;\n}\n\n// 4) причина исключения из СТАТИСТИКИ приёмов (правило 1.5). Из окна соседей НЕ убираем.\nfunction excludeReason(p) {\n  const text = (p.text || '').trim();\n  if (p.marked_as_ads === 1) return 'ads';\n  if (p.copy_history) return 'repost';\n  if (!text) return 'empty_text';\n  if (/розыгрыш|конкурс|репост.*участи|приз/i.test(text)) return 'giveaway_maybe';\n  return null;\n}\n\n// 5) сортировка по времени и базовые метрики\nitems.sort((a, b) => a.date - b.date);\nconst rows = items.map(p => {\n  const reach = reachOf(p);\n  const fullText = (p.text || '').trim();\n  return {\n    id: p.id,\n    date: p.date,\n    date_h: new Date(p.date * 1000).toISOString().slice(0, 10),\n    first_line: fullText.split('\\n')[0].slice(0, 200),\n    _full: fullText,                 // временно, срежем ниже под notable\n    text_len: fullText.length,\n    is_clip: (p.attachments || []).some(a => a.type === 'video' && a.video && a.video.type === 'short_video'),\n    reach,\n    er: +erOf(p, reach).toFixed(4),\n    likes: (p.likes && p.likes.count) || (p.reactions && p.reactions.count) || 0,\n    comments: (p.comments && p.comments.count) || 0,\n    reposts: (p.reposts && p.reposts.count) || 0,\n    exclude: excludeReason(p),\n  };\n});\n\n// 6) медиана 4 соседей и отношение (правило 1.1). Соседи — ВСЕ посты в окне.\nfunction median(arr) {\n  if (!arr.length) return 0;\n  const s = arr.slice().sort((a, b) => a - b);\n  const m = Math.floor(s.length / 2);\n  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;\n}\nrows.forEach((r, i) => {\n  const nb = [];\n  for (let k = i - NEIGHBORS; k <= i + NEIGHBORS; k++) {\n    if (k === i || k < 0 || k >= rows.length) continue;\n    nb.push(rows[k].reach);\n  }\n  const med = median(nb);\n  r.neighbor_median = med;\n  r.ratio = med ? +(r.reach / med).toFixed(2) : null;\n  r.notable = r.ratio != null && r.ratio >= NOTABLE_RATIO && !r.exclude;\n  r.outlier = r.ratio != null && r.ratio >= OUTLIER_RATIO && !r.exclude;\n});\n\n// 7) полный текст даём ТОЛЬКО notable-постам (они идут в приёмы), остальным — срезаем\nrows.forEach(r => {\n  if (r.notable) r.text = r._full.slice(0, FULL_TEXT_CHARS);\n  delete r._full;\n});\n\n// 8) итог для Аналитика\nconst period = rows.length ? `${rows[0].date_h} – ${rows[rows.length - 1].date_h}` : '';\nconst excluded_count = rows.filter(r => r.exclude).length;\n\nreturn [{\n  json: {\n    period,\n    total: rows.length,\n    excluded_count,\n    notable_count: rows.filter(r => r.notable).length,\n    posts: rows,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        -112
+      ],
+      "id": "cf7f30bb-c4a2-480a-92dc-c4c2b4742772",
+      "name": "Prepare Data"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-v4-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        192,
+        112
+      ],
+      "id": "d4e97d95-95a3-4429-a970-70570fbcfde4",
+      "name": "DeepSeek 1",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "",
+          "name": "deepSeekApi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "deepseek-v4-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        480,
+        112
+      ],
+      "id": "39c19c0c-86ec-4766-b8ab-4de8f8ec365f",
+      "name": "DeepSeek 2",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "",
+          "name": "deepSeekApi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"analysis\": {\n    \"period\": \"27.07.2026 – 08.09.2026\",\n    \"reach_note\": \"как менялись охваты и что из этого следует\",\n    \"excluded\": \"13\",\n    \"patterns\": [\n      {\n        \"name\": \"имя приёма\",\n        \"format\": \"формат\",\n        \"angle\": \"угол\",\n        \"hook_type\": \"тип крючка\",\n        \"evidence\": \"3\",\n        \"strength_ratio\": \"6.91\",\n        \"strength_reposts\": \"185\",\n        \"reliable\": \"true\",\n        \"ugc_only\": \"false\",\n        \"gives_reposts\": \"true\"\n      }\n    ]\n  },\n  \"top_posts\": [\n    {\n      \"first_line\": \"первая строка опорного поста\",\n      \"format\": \"формат\",\n      \"pain\": \"боль аудитории\",\n      \"ending\": \"чем заканчивается\",\n      \"pattern\": \"имя приёма\",\n      \"ugc_only\": \"false\"\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        336,
+        112
+      ],
+      "id": "c38f44e4-9cdf-44db-87f9-a36d2dd00733",
+      "name": "Output Parser 1"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"analysis\": {\n    \"period\": \"27.07.2026 – 08.09.2026\",\n    \"reach_note\": \"как менялись охваты и как это учтено\",\n    \"excluded\": \"15\",\n    \"patterns\": [\n      {\n        \"name\": \"имя приёма\",\n        \"format\": \"формат\",\n        \"angle\": \"угол\",\n        \"hook_type\": \"тип крючка\",\n        \"evidence\": \"3\",\n        \"reliable\": \"true\"\n      }\n    ]\n  },\n  \"posts\": [\n    {\n      \"n\": 1,\n      \"pattern\": \"имя приёма из analysis.patterns\",\n      \"topic\": \"конкретный товар из ответа search_price_list\",\n      \"price_source\": \"цена и наличие как их вернул search_price_list\",\n      \"image_prompt\": \"английский промпт со сценой и инструкцией по надписи\",\n      \"image_size\": \"1536x1024\",\n      \"visual_device\": \"номер и название приёма цепляемости\",\n      \"image_text\": \"надпись на картинке дословно\",\n      \"text\": \"полный текст поста\"\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        112
+      ],
+      "id": "58f9c867-6625-4e99-acc5-60554952fa2b",
+      "name": "Output Parser 2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// На случай, если модель обернула ответ в лишний ключ \"output\"\nlet data = $input.first().json;\n\n// n8n кладёт результат агента в output; иногда модель добавляет свой второй output\nif (data.output !== undefined) data = data.output;\nif (typeof data === 'string') data = JSON.parse(data);\nif (data.output !== undefined) data = data.output; // на случай двойной обёртки\n\nreturn [{ json: data }];;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -112
+      ],
+      "id": "839cbf99-3b64-4335-88dc-9327cb9d105f",
+      "name": "Clear & Normalize"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        -112
+      ],
+      "id": "97218e05-79f8-4a9a-9cff-a905a3061004",
+      "name": "Start"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Default Params').item.json.chatId }}",
+        "text": "Ошибка модели на этапе анализа",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        896,
+        -288
+      ],
+      "id": "06be1e43-ee7e-413f-b550-f6871d162766",
+      "name": "Error AI",
+      "credentials": {
+        "telegramApi": {
+          "id": "",
+          "name": "telegramApi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{ $('Default Params').item.json.chatId }}",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "={{ $('Split Out').item.json.text.slice(0,1010) }}..."
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1568,
+        -112
+      ],
+      "id": "383e6c7c-b49d-45ee-84a0-729c0a541efd",
+      "name": "Send Posts",
+      "credentials": {
+        "telegramApi": {
+          "id": "",
+          "name": "telegramApi"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Prepare Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Params": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search_price_list": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Generator",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Analyst": {
+      "main": [
+        [
+          {
+            "node": "AI Generator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Generator": {
+      "main": [
+        [
+          {
+            "node": "Clear & Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "Send Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Data": {
+      "main": [
+        [
+          {
+            "node": "AI Analyst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek 1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Analyst",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek 2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Output Parser 1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Analyst",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Output Parser 2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clear & Normalize": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Default Params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Posts": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

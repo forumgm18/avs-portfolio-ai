@@ -1,0 +1,2414 @@
+{
+  "name": "Gora 03-05 AI Content Video",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.fish.audio/model",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "tts"
+            },
+            {
+              "name": "title",
+              "value": "={{ $('Load Source Webhook').item.json.body.voiceName }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ $('Load Source Webhook').item.json.body.voiceDescription }}"
+            },
+            {
+              "name": "visibility",
+              "value": "private"
+            },
+            {
+              "name": "train_mode",
+              "value": "fast"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "voices",
+              "inputDataFieldName": "voice"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        112,
+        864
+      ],
+      "id": "d8974fd3-d1d1-4c47-b47d-792345b49a5d",
+      "name": "Voice Clon",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "",
+          "name": "httpBearerAuth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.fish.audio/v1/tts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "model",
+              "value": "s2.1-pro-free"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"{{ $json.text }}\",\n  \"reference_id\": \"{{ $('Set Webhook Data').item.json.voiceId }}\"\n} ",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1312,
+        2144
+      ],
+      "id": "b25cd115-2bfb-48a4-9119-cc024c91c9fa",
+      "name": "TTS by Voice Id",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "",
+          "name": "httpBearerAuth"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "authentication": "apiKey",
+        "resource": "avatar",
+        "avatarUseJsonBody": true,
+        "avatarJsonBody": "={\n  \"type\": \"photo\",\n  \"name\": \"{{ $('Load Source Webhook').item.json.body.avatarName }}\",\n  \"file\": { \n    \"type\": \"asset_id\", \n    \"asset_id\": \"{{$json.data.asset_id}}\" \n  }\n} "
+      },
+      "type": "@heygenofficial/n8n-nodes-heygen-official.heygenNode",
+      "typeVersion": 1,
+      "position": [
+        240,
+        48
+      ],
+      "id": "82209c0c-4b74-418b-8efe-49d8816358be",
+      "name": "Create an avatar",
+      "credentials": {
+        "heyGenApi": {
+          "id": "",
+          "name": "heyGenApi"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.heygen.com/v3/avatars/looks/{{ $json.data.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        656,
+        48
+      ],
+      "id": "437396e9-eea1-445a-a50a-1d200574a45e",
+      "name": "Avatar Test",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "httpHeaderAuth"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1184,
+        -208
+      ],
+      "id": "ff28e41c-88fd-44c9-b70c-3ebabd1d6b2b",
+      "name": "Wait"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.heygen.com/v3/assets",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "avatar"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        48,
+        64
+      ],
+      "id": "72839a11-d776-4d6e-ae3f-60e769c0f593",
+      "name": "Upload Photo",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "httpHeaderAuth"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        912,
+        992
+      ],
+      "id": "eed388f1-e006-4a68-9bf1-1151eea0b84b",
+      "name": "Wait1"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.fish.audio/model/{{ $json._id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        368,
+        864
+      ],
+      "id": "a159db65-6d75-4b48-a40b-58535d807d96",
+      "name": "Test Voice Clon",
+      "retryOnFail": false,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "",
+          "name": "httpBearerAuth"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "o8za6v8bOs5eEcEq",
+          "mode": "list",
+          "cachedResultName": "Gora Voice",
+          "cachedResultUrl": "/projects/YovxAb2ipCUyEzmF/datatables/o8za6v8bOs5eEcEq"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "idType": "AVATAR_ID",
+            "idValue": "={{ $json.data.id }}",
+            "previewUrl": "={{ $json.data.preview_image_url }}",
+            "name": "={{ $json.data.name }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "idType",
+              "displayName": "idType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "idValue",
+              "displayName": "idValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "previewUrl",
+              "displayName": "previewUrl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1424,
+        32
+      ],
+      "id": "b78cb67b-b0b1-4a40-b2ce-ea204cbe3920",
+      "name": "Save Avatar to BD"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "o8za6v8bOs5eEcEq",
+          "mode": "list",
+          "cachedResultName": "Gora Voice",
+          "cachedResultUrl": "/projects/YovxAb2ipCUyEzmF/datatables/o8za6v8bOs5eEcEq"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "idType": "VOICE_CLON_ID",
+            "idValue": "={{ $json._id }}",
+            "name": "={{ $json.title }}",
+            "description": "={{ $json.description }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "idType",
+              "displayName": "idType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "idValue",
+              "displayName": "idValue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "previewUrl",
+              "displayName": "previewUrl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1360,
+        848
+      ],
+      "id": "106c598a-fbe6-469e-bd5b-e19ca5293497",
+      "name": "Save Voice Clon to BD"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "12b36ef0-57bc-470f-9019-a5a394edd2a2",
+                    "leftValue": "={{ $json.data.status }}",
+                    "rightValue": "processing",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "processing"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.status }}",
+                    "rightValue": "completed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e4dab9a3-1ea1-4585-ae1b-ab06d4380fd5"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "completed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d8490885-63c6-4872-8289-b1d001c1cbc0",
+                    "leftValue": "={{ $json.data.status }}",
+                    "rightValue": "pending_consent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "pending_consent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "1409cc0a-f627-4138-b13e-f5ac8249f211",
+                    "leftValue": "={{ $json.data.status }}",
+                    "rightValue": "failed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "failed"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "fallbackOutput": "none"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        16
+      ],
+      "id": "177dec7d-b6e6-4241-94c8-88ee5d2840fd",
+      "name": "Avatar is ready"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d45709a8-edb4-4bbe-a90e-19c0cfa8f57c",
+                    "leftValue": "={{ $json._id }}",
+                    "rightValue": "failed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "failed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.state }}",
+                    "rightValue": "trained",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "518542d7-a6a6-479f-9919-ed925ec749b8"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "trained"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4d9a4713-12c7-4f55-afd6-6417702c0d23",
+                    "leftValue": "={{ ['created','training'].includes($json.state) }}",
+                    "rightValue": "={{['training', '']}}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "training"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        752,
+        832
+      ],
+      "id": "2ec28036-1d3e-4230-ba17-ff76c737b8f4",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "rowNotExists",
+        "dataTableId": {
+          "__rl": true,
+          "value": "o8za6v8bOs5eEcEq",
+          "mode": "list",
+          "cachedResultName": "Gora Voice",
+          "cachedResultUrl": "/projects/YovxAb2ipCUyEzmF/datatables/o8za6v8bOs5eEcEq"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "idValue",
+              "keyValue": "={{ $json.data.id }}"
+            },
+            {
+              "keyName": "idType",
+              "keyValue": "AVATAR_ID"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        32
+      ],
+      "id": "db0bb837-5bfb-496d-8126-871d1035740e",
+      "name": "Avatar isn’t BD"
+    },
+    {
+      "parameters": {
+        "operation": "rowNotExists",
+        "dataTableId": {
+          "__rl": true,
+          "value": "o8za6v8bOs5eEcEq",
+          "mode": "list",
+          "cachedResultName": "Gora Voice",
+          "cachedResultUrl": "/projects/YovxAb2ipCUyEzmF/datatables/o8za6v8bOs5eEcEq"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "idValue",
+              "keyValue": "={{ $json._id }}1"
+            },
+            {
+              "keyName": "idType",
+              "keyValue": "VOICE_CLON_ID"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        848
+      ],
+      "id": "9a7e2fb0-6606-41ef-9782-74ab94a3ed1f",
+      "name": "Voice Clon isn’t BD"
+    },
+    {
+      "parameters": {
+        "path": "gora-03-05-ai-content-video-webform",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -320,
+        1552
+      ],
+      "id": "9c2c25cb-8ef5-44fb-8ded-7c4d3d123966",
+      "name": "Get WebForm Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "o8za6v8bOs5eEcEq",
+          "mode": "list",
+          "cachedResultName": "Gora Voice",
+          "cachedResultUrl": "/projects/YovxAb2ipCUyEzmF/datatables/o8za6v8bOs5eEcEq"
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -128,
+        1552
+      ],
+      "id": "e1ac5ec4-3078-42fd-8513-74e98f643139",
+      "name": "Get rows from BD"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\n\nconst avatarOptions = rows\n  .filter(r => r.json.idType === 'AVATAR_ID')\n  .map(r => `<option value=\"${r.json.idValue}\">${r.json.name}</option>`)\n  .join('');\n\nconst voiceOptions = rows\n  .filter(r => r.json.idType === 'VOICE_CLON_ID')\n  .map(r => `<option value=\"${r.json.idValue}\">${r.json.name}</option>`)\n  .join('');\n\n// путь submit-вебхука — единственное место, где его правишь в коде\nconst submitPath = 'gora-03-05-ai-content-video-webform_submit';\n// хост берём из запроса, открывшего форму — не привязываемся к домену\nconst host = $('Get WebForm Webhook').item.json.headers.host;\nconst submitUrl = `https://${host}/webhook/${submitPath}`;\n\nconst html = `<!DOCTYPE html>\n<html lang=\"ru\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"color-scheme\" content=\"light dark\">\n  <link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css\">\n  <title>Генерация Видео</title>\n  <style>\n    body > main {max-width: 500px;}\n    small {margin-bottom: 20px;}\n  </style>\n</head>\n<body>\n  <main>\n    <h1>Генерация Видео</h1>\n    <form id=\"videoForm\" method=\"POST\" action=\"${submitUrl}\">\n      <label>Аватар\n        <select name=\"avatarId\" required>${avatarOptions}</select>\n      </label>\n      <label>Голос\n        <select name=\"voiceId\" required>${voiceOptions}</select>\n      </label>\n      <label>Тема для AI или Текст\n        <textarea name=\"text\" rows=\"4\"></textarea>\n      </label>\n      <small class=\"field-error\" data-for=\"text\" style=\"color: var(--pico-del-color); display: none;\">\n        Введи тему или текст ролика.\n      </small>\n      <label>Email\n        <input type=\"email\" name=\"email\" required>\n      </label>\n      <small class=\"field-error\" data-for=\"email\" style=\"color: var(--pico-del-color); display: none;\">\n        Укажи корректный email.\n      </small>\n      <label>\n        <input type=\"checkbox\" name=\"ai\" value=\"1\"> AI\n      </label>\n      <button type=\"submit\" id=\"submitBtn\">Отправить</button>\n    </form>\n\n    <article id=\"successMsg\" style=\"display: none;\">\n      <h2>Готово!</h2>\n      <p>Запрос принят в обработку. Готовый ролик придёт на email.</p>\n    </article>\n  </main>\n  <script>\n    const form = document.getElementById('videoForm');\n    const successEl = document.getElementById('successMsg');\n    const submitBtn = document.getElementById('submitBtn');\n\n    function clearErrors() {\n      document.querySelectorAll('.field-error').forEach(el => el.style.display = 'none');\n    }\n    function showFieldError(name, msg) {\n      const el = document.querySelector('.field-error[data-for=\"' + name + '\"]');\n      if (el) {\n        if (msg) el.textContent = msg;\n        el.style.display = 'block';\n      }\n    }\n\n    form.addEventListener('submit', async (e) => {\n      e.preventDefault();\n      clearErrors();\n\n      let valid = true;\n\n      // select'ы: на случай пустой базы\n      if (!form.avatarId.value) {\n        showFieldError('text', 'Нет доступных аватаров в базе.');\n        valid = false;\n      }\n      if (!form.voiceId.value) {\n        showFieldError('text', 'Нет доступных голосов в базе.');\n        valid = false;\n      }\n\n      // текст\n      if (!form.text.value.trim()) {\n        showFieldError('text', 'Введи текст ролика.');\n        valid = false;\n      }\n\n      // email: непустой + базовый формат\n      const email = form.email.value.trim();\n      const at = email.indexOf('@');\n      const dot = email.lastIndexOf('.');\n      const emailOk = at > 0 && dot > at + 1 && dot < email.length - 1 && !email.includes(' ');\n      if (!emailOk) {\n        showFieldError('email');\n        valid = false;\n      }\n\n      if (!valid) return;\n\n      submitBtn.setAttribute('aria-busy', 'true');\n      submitBtn.disabled = true;\n\n      try {\n        const res = await fetch(form.action, {\n          method: 'POST',\n          body: new FormData(form),\n        });\n        if (!res.ok) throw new Error('HTTP ' + res.status);\n\n        form.style.display = 'none';\n        successEl.style.display = 'block';\n      } catch (err) {\n        submitBtn.removeAttribute('aria-busy');\n        submitBtn.disabled = false;\n        showFieldError('email', 'Ошибка отправки: ' + err.message + '. Попробуйте ещё раз.');\n      }\n    });\n  </script>  \n  </body>\n</html>`;\n\nreturn [{ json: { html } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        1552
+      ],
+      "id": "15111e3d-96fb-4ab8-b30e-2c1cdd542906",
+      "name": "Generate WebForm"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        320,
+        1552
+      ],
+      "id": "c721e152-4c84-49d5-98e6-fcdc1a10014a",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gora-03-05-ai-content-video-webform_submit",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -336,
+        2128
+      ],
+      "id": "cfe7da4f-a52d-4c09-8164-c1910b1229a4",
+      "name": "Submit WebForm Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2ae41865-b4e1-498c-bc47-66a578419f6c",
+              "name": "avatarId",
+              "value": "={{ $('Submit WebForm Webhook').item.json.body.avatarId }}",
+              "type": "string"
+            },
+            {
+              "id": "2422e3b3-ac6f-4923-8fee-8259fd7d5845",
+              "name": "voiceId",
+              "value": "={{ $('Submit WebForm Webhook').item.json.body.voiceId }}",
+              "type": "string"
+            },
+            {
+              "id": "3a600fab-75d6-45b3-9de4-63c7cdc1d1ab",
+              "name": "text",
+              "value": "={{ $('Submit WebForm Webhook').item.json.body.text }}",
+              "type": "string"
+            },
+            {
+              "id": "b7e456bc-065b-4447-8050-4b0bcc629125",
+              "name": "isAi",
+              "value": "={{ $('Submit WebForm Webhook').item.json.body?.ai && true}}",
+              "type": "boolean"
+            },
+            {
+              "id": "9e43e2fb-3490-4934-bf1a-060432a8d4ec",
+              "name": "avatarName",
+              "value": "={{ $json[$('Submit WebForm Webhook').item.json.body.avatarId] }}",
+              "type": "string"
+            },
+            {
+              "id": "fb535d0e-4ee4-496a-a053-c8d73cb61153",
+              "name": "voiceName",
+              "value": "={{ $json[ $('Submit WebForm Webhook').item.json.body.voiceId] }}",
+              "type": "string"
+            },
+            {
+              "id": "3e1da07e-66e6-4622-b3b1-4cc620a6ee56",
+              "name": "tgChatId",
+              "value": 264230076,
+              "type": "number"
+            },
+            {
+              "id": "bca8242f-b01b-4367-a02d-272cf7877085",
+              "name": "userEmail",
+              "value": "={{ $('Submit WebForm Webhook').item.json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "5a672faf-f6b6-4c7a-a539-709843993213",
+              "name": "ttl",
+              "value": 9000,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        256,
+        2128
+      ],
+      "id": "0c5a94e1-9c2a-461c-9643-a46b5cfc0494",
+      "name": "Set Webhook Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f12075e9-270f-489d-8fb2-ea8bde658576",
+              "leftValue": "={{ $json.isAi }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        2128
+      ],
+      "id": "b12f8bf4-e3cf-4168-a5c9-62607d61fa36",
+      "name": "Response By AI"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "Ты — сценарист коротких видеороликов. На вход получаешь тему ролика. Твоя задача — написать законченный текст на эту тему, который будет озвучен через сервис TTS (синтез речи).\n\nЯЗЫК:\n- Текст всегда на русском языке.\n- Английские термины, названия и имена записывай русской транскрипцией так, как они звучат (например: «Ютуб», «Джейсон», «дедлайн»), чтобы синтезатор произнёс их корректно. Латиницу в тексте не оставляй.\n\nТРЕБОВАНИЯ К ТЕКСТУ:\n- Длительность озвучки: 30–40 секунд. Это примерно 70–95 слов (при средней скорости чтения ~2,5 слова в секунду). Держись в этом диапазоне.\n- Пиши живым разговорным языком, короткими предложениями. Текст должен легко звучать вслух.\n- Структура: цепляющее первое предложение (хук) → суть → короткий вывод или призыв.\n- Раскрывай тему по существу, без воды и общих фраз.\n\nОГРАНИЧЕНИЯ ДЛЯ TTS:\n- Все числа, даты, сокращения и символы пиши словами (например: «пятьдесят процентов» вместо «50%», «и так далее» вместо «и т.д.»).\n- Не используй символы, которые TTS прочитает неправильно: #, *, /, →, эмодзи. Кавычки-ёлочки заменяй на обычные или убирай.\n- Расставляй знаки препинания так, чтобы речь звучала с естественными паузами: точки, запятые, тире.\n- В сам текст озвучки не вставляй заголовки, списки, markdown, ремарки или пояснения в скобках.\n\nФОРМАТ ОТВЕТА:\nВерни ТОЛЬКО валидный JSON-объект, без markdown-обёртки, без ```json, без каких-либо пояснений до или после. Строго такая структура:\n\n{\"text\": \"готовый текст озвучки одной строкой\"}\n\nВнутри значения \"text\" экранируй кавычки и спецсимволы по правилам JSON. Не добавляй других полей."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        576,
+        1808
+      ],
+      "id": "cc403be2-65a9-486d-988e-80d0d4be5c18",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        592,
+        2000
+      ],
+      "id": "20eb1c29-f359-4ce6-8e6b-037bd7a15601",
+      "name": "DeepSeek Chat Model",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "",
+          "name": "deepSeekApi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4bd67ca2-7967-47fe-9286-540f9dcdcc87",
+              "name": "text",
+              "value": "={{ JSON.parse($json.output).text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        960,
+        1792
+      ],
+      "id": "38213a2d-5de6-43d5-82f1-8e017fa096f0",
+      "name": "Format AI Output"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "250e8e03-5cec-4cf3-886e-f73f71e4c827",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "948d762d-f538-444e-9aa0-1fed57e9077e",
+              "name": "fileName",
+              "value": "=tts_{{ $('Set Webhook Data').item.json.avatarName }}_{{ $('Set Webhook Data').item.json.voiceName }}_{{ $now.format('yyyy-MM-dd_HH-mm-ss') }}.mp3",
+              "type": "string"
+            },
+            {
+              "id": "33cc9ff6-ed37-4d8f-ab73-9663409dab51",
+              "name": "s3KeyPrefix",
+              "value": "tts",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1136,
+        2144
+      ],
+      "id": "071ade87-1c4d-4c1a-b10d-ea6ad9d0f6e3",
+      "name": "Prepare Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = {};\n\nfor (const item of $input.all()) {\n  result[item.json.idValue] = item.json.name;\n}\n\nreturn [{ json: result }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        2128
+      ],
+      "id": "bd6d8600-ee53-493e-a705-ae4427e716cf",
+      "name": "Prepare BD Rows"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "o8za6v8bOs5eEcEq",
+          "mode": "list",
+          "cachedResultName": "Gora Voice",
+          "cachedResultUrl": "/projects/YovxAb2ipCUyEzmF/datatables/o8za6v8bOs5eEcEq"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "idValue",
+              "keyValue": "={{ $json.body.avatarId }}"
+            },
+            {
+              "keyName": "idValue",
+              "keyValue": "={{ $json.body.voiceId }}"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -144,
+        2128
+      ],
+      "id": "c490e6be-a55c-428e-9719-a61626b75260",
+      "name": "Get Voice & Avatar from BD",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://presigner:8787/presign",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1920,
+        2144
+      ],
+      "id": "2d77e7ef-bd4d-49d0-be3b-e5132ad6d253",
+      "name": "Get S3 Download Url",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "scratch",
+        "fileName": "={{ $('Prepare Data').item.json.s3KeyPrefix }}/{{ $('Prepare Data').item.json.fileName }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        2144
+      ],
+      "id": "d299d5d0-80ed-4891-9fa4-cf82ce5f8fe9",
+      "name": "Upload TTS to S3",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "s3": {
+          "id": "",
+          "name": "s3"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ea3972f6-dfce-4be6-93f4-ab2e83b30005",
+              "name": "key",
+              "value": "={{ $('Prepare Data').item.json.s3KeyPrefix }}/{{ $('Prepare Data').item.json.fileName }}",
+              "type": "string"
+            },
+            {
+              "id": "cc3047f7-cf9c-45c1-92f3-ae12b3b9d49e",
+              "name": "ttl",
+              "value": "={{ $('Set Webhook Data').item.json.ttl }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1728,
+        2144
+      ],
+      "id": "8769c2cf-8105-4696-937b-57912a903d6d",
+      "name": "S3 Preset JSON Keys"
+    },
+    {
+      "parameters": {
+        "authentication": "apiKey",
+        "operation": "createVideo",
+        "videosUseJsonBody": true,
+        "videosJsonBody": "={\n  \"type\": \"avatar\",\n  \"avatar_id\": \"{{ $('Set Webhook Data').item.json.avatarId }}\",\n  \"audio_url\": \"{{ $json.url }}\",\n  \"aspect_ratio\": \"9:16\",\n  \"resolution\" : \"1080p\",\n  \"output_format\": \"webm\"\n}\n"
+      },
+      "type": "@heygenofficial/n8n-nodes-heygen-official.heygenNode",
+      "typeVersion": 1,
+      "position": [
+        2128,
+        2144
+      ],
+      "id": "9490b801-e2fc-4976-8415-4ca53e1beb83",
+      "name": "Create a video",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "heyGenApi": {
+          "id": "",
+          "name": "heyGenApi"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "authentication": "apiKey",
+        "operation": "getVideoStatus",
+        "videoId": "={{ $json.data.id }}"
+      },
+      "type": "@heygenofficial/n8n-nodes-heygen-official.heygenNode",
+      "typeVersion": 1,
+      "position": [
+        2528,
+        2128
+      ],
+      "id": "aa54d7d6-9af5-4470-9505-659f7fa1ed84",
+      "name": "Get a video",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "heyGenApi": {
+          "id": "",
+          "name": "heyGenApi"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.status }}",
+                    "rightValue": "failed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "77531a4f-723f-4b73-9122-1f3f9edae56d"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "failed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4922f9ba-43bd-452e-ac08-7cd57e07e9e8",
+                    "leftValue": "={{ $json.data.status }}",
+                    "rightValue": "completed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "completed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7d74096f-c54f-4214-b6ec-1b63777d7fed",
+                    "leftValue": "={{ $json.data.status }}",
+                    "rightValue": "processing",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "processing"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "193eb0c7-d442-41b6-ad64-d583f985ebc2",
+                    "leftValue": "={{ $json.data.status }}",
+                    "rightValue": "pending",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "pending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2800,
+        2080
+      ],
+      "id": "9a7b975d-9a92-4b33-9b39-bee12c407cc3",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3040,
+        2336
+      ],
+      "id": "4d4a6b43-8e91-4f1e-ba81-1a8ade1f88dd",
+      "name": "Wait2"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.data.video_url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3040,
+        2096
+      ],
+      "id": "cf5ac707-68c3-44bc-bf28-584b66f67812",
+      "name": "Download Video",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendVideo",
+        "chatId": "={{ $('Set Webhook Data').item.json.tgChatId }}",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "={{ $('Prepare Data').item.json.fileName }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3344,
+        2000
+      ],
+      "id": "735c48f6-d785-4587-bf95-660a52842229",
+      "name": "Send a video",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "telegramApi": {
+          "id": "",
+          "name": "telegramApi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Set Webhook Data').item.json.userEmail }}",
+        "subject": "={{ $('Prepare Data').item.json.fileName }}",
+        "message": "={{ $('Prepare Data').item.json.fileName }}",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3344,
+        2208
+      ],
+      "id": "be80739e-1b2b-4efa-a161-9b0afd5ccec4",
+      "name": "Send a message",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "gmailOAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={\n  \"message\": \"Ошибка создания TTS\",\n  \"nodeName\": \"{{ $prevNode.name }}\",\n  \"errorType\": \"http_error\",\n  \"errorCode\": \"{{ $json.error.code }}\"\n}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        2368
+      ],
+      "id": "3ee8965d-2b3f-4981-85da-57f6784816fb",
+      "name": "Stop and Error1"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={\n  \"message\": \"Ошибка Загрузки файла на S3\",\n  \"nodeName\": \"{{ $prevNode.name }}\",\n  \"errorType\": \"http_error\",\n  \"errorCode\": \"{{ $json.error.code }}\"\n}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        2368
+      ],
+      "id": "5418b212-4946-407b-8a10-31966aaac197",
+      "name": "Stop and Error8"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={\n  \"message\": \"Ошибка генерации ссылки на временный файл S3\",\n  \"nodeName\": \"{{ $prevNode.name }}\",\n  \"errorType\": \"http_error\",\n  \"errorCode\": \"{{ $json.error.code }}\"\n}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        2064,
+        2368
+      ],
+      "id": "03b7f37c-69f4-46c1-88e0-a5e7db3e667c",
+      "name": "Stop and Error9"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={\n  \"message\": \"Ошибка генерации видео-ролика HeyGen\",\n  \"nodeName\": \"{{ $prevNode.name }}\",\n  \"errorType\": \"http_error\"\n  \n}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        2272,
+        2368
+      ],
+      "id": "50bedd40-ec85-46c9-ab67-5fc9b19c4374",
+      "name": "Stop and Error10"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={\n  \"message\": \"Ошибка получения ссылки на видео-ролик HeyGen\",\n  \"nodeName\": \"{{ $prevNode.name }}\",\n  \"errorType\": \"http_error\",\n  \"errorCode\": \"{{ $json.error.code }}\"\n}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        2688,
+        2352
+      ],
+      "id": "4899ece0-26e4-45d9-883e-e90426e74ada",
+      "name": "Stop and Error11"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={\n  \"message\": \"Ошибка скачивания видео-ролика с HeyGen\",\n  \"nodeName\": \"{{ $prevNode.name }}\",\n  \"errorType\": \"http_error\",\n  \"errorCode\": \"{{ $json.error.code }}\"\n}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        3344,
+        2416
+      ],
+      "id": "6c589e30-839c-45fd-abc4-30403583e8fc",
+      "name": "Stop and Error12"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={\n  \"message\": \"Ошибка AI\",\n  \"nodeName\": \"{{ $prevNode.name }}\",\n  \"errorType\": \"ai_error\",\n  \"errorCode\": \"\"\n}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        864,
+        1984
+      ],
+      "id": "687e447e-d9e1-47de-8eb9-39f494934337",
+      "name": "Stop and Error2"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={\n  \"message\": \"Ошибка получения voiceId или avatarId из БД\",\n  \"nodeName\": \"{{ $prevNode.name }}\",\n  \"errorType\": \"bd_error\",\n  \"errorCode\": \"\"\n}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        64,
+        2304
+      ],
+      "id": "6bd766eb-f5ee-4c41-9d51-b8b3ab2800ee",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={\n  \"message\": \"{{$json.data.error.message}}\",\n  \"nodeName\": \"{{$prevNode.name}}\",\n  \"errorType\": \"http_error\",\n  \"errorCode\": \"{{$json.details.body.error.code}}\"\n}\n"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        624,
+        320
+      ],
+      "id": "369f484a-3095-4262-a7b8-216ba5c41e59",
+      "name": "Stop and Error3"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={\n  \"message\": \"{{$json.data.error.message}}\",\n  \"nodeName\": \"{{$prevNode.name}}\",\n  \"errorType\": \"api_send_failed\",\n  \"errorCode\": \"{{$json.details.body.error.code}}\"\n}\n"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        848,
+        320
+      ],
+      "id": "930dc342-5954-497a-b8b7-9a083e8145da",
+      "name": "Stop and Error4"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={\n  \"message\": \"api_send_pending_consent\",\n  \"nodeName\": \"{{$prevNode.name}}\",\n  \"errorType\": \"api_send_pending_consent\",\n  \"errorCode\": \"\"\n}\n"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        320
+      ],
+      "id": "c992de6e-43bc-4a25-8620-c9c4e1f1d759",
+      "name": "Stop and Error5"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={\n  \"message\": \"{{$json.data.error.message}}\",\n  \"nodeName\": \"{{$prevNode.name}}\",\n  \"errorType\": \"http_error\",\n  \"errorCode\": \"{{$json.details.body.error.code}}\"\n}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        576,
+        976
+      ],
+      "id": "18d46930-2ffc-4cb1-a3f8-5f9e6ffa776b",
+      "name": "Stop and Error6"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={\n  \"message\": \"{{$json.details.body.message}}\",\n  \"nodeName\": \"{{$prevNode.name}}\",\n  \"errorType\": \"http_error\",\n  \"errorCode\": \"{{$json.details.body.error.code}}\"\n}\n"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        928,
+        720
+      ],
+      "id": "478184f7-46b1-48f7-9560-7d02b232f825",
+      "name": "Stop and Error7"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\n// путь submit-вебхука — единственное место, где его правишь в коде\nconst submitPath = 'loading-resources-webform_submit';\n// хост берём из запроса, открывшего форму — не привязываемся к домену\nconst host = $('Get WebForm Uploading Resources').item.json.headers.host;\nconst submitUrl = `https://${host}/webhook/${submitPath}`;\n\nconst html = `<!DOCTYPE html>\n<html lang=\"ru\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"color-scheme\" content=\"light dark\">\n  <link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css\">\n  <title>Создать Аватар</title>\n  <style>\n    body > main {max-width: 500px!important;}\n    small { margin-bottom: 20px;}\n  </style>  \n</head>\n<body>\n  <main>\n    <h1>Создать Аватар</h1>\n    <form id=\"uploadForm\" method=\"POST\" action=\"${submitUrl}\" enctype=\"multipart/form-data\">\n      <label>Изображение Аватара\n        <input type=\"file\" name=\"avatar\" accept=\"image/*\">\n      </label>\n      <label>Название аватара\n        <input type=\"text\" name=\"avatarName\">\n      </label>\n      <small class=\"field-error\" data-for=\"avatarName\" style=\"color: var(--pico-del-color); display: none;\">\n        Укажи название аватара.\n      </small>\n\n      <label>Голос Аватара\n        <input type=\"file\" name=\"voice\" accept=\"audio/*\">\n      </label>\n      <label>Название голоса\n        <input type=\"text\" name=\"voiceName\">\n      </label>\n      <small class=\"field-error\" data-for=\"voiceName\" style=\"color: var(--pico-del-color); display: none;\">\n        Укажи название голоса.\n      </small>\n      <label>Описание голоса\n        <textarea name=\"voiceDescription\" rows=\"2\" placeholder=\"Необязательно\"></textarea>\n      </label>\n\n      <small id=\"formError\" style=\"color: var(--pico-del-color); display: none;\">\n        Загрузите хотя бы один файл — фото или голос.\n      </small>\n      <button type=\"submit\" id=\"submitBtn\">Отправить</button>\n    </form>\n\n    <article id=\"successMsg\" style=\"display: none;\">\n      <h2>Готово!</h2>\n      <p>Файлы отправлены в обработку. Результат придёт в Telegram.</p>\n    </article>\n  </main>\n\n  <script>\n    const form = document.getElementById('uploadForm');\n    const formError = document.getElementById('formError');\n    const successEl = document.getElementById('successMsg');\n    const submitBtn = document.getElementById('submitBtn');\n\n    // прячем все ошибки\n    function clearErrors() {\n      formError.style.display = 'none';\n      document.querySelectorAll('.field-error').forEach(el => el.style.display = 'none');\n    }\n\n    // показать ошибку конкретного поля\n    function showFieldError(name) {\n      const el = document.querySelector('.field-error[data-for=\"' + name + '\"]');\n      if (el) el.style.display = 'block';\n    }\n\n    form.addEventListener('submit', async (e) => {\n      e.preventDefault();\n      clearErrors();\n\n      const hasAvatar = form.avatar.files.length > 0;\n      const hasVoice = form.voice.files.length > 0;\n\n      // 1. хотя бы один файл\n      if (!hasAvatar && !hasVoice) {\n        formError.style.display = 'block';\n        return;\n      }\n\n      let valid = true;\n\n      // 2. avatar выбран -> название обязательно\n      if (hasAvatar && !form.avatarName.value.trim()) {\n        showFieldError('avatarName');\n        valid = false;\n      }\n\n      // 3. voice выбран -> название обязательно\n      if (hasVoice && !form.voiceName.value.trim()) {\n        showFieldError('voiceName');\n        valid = false;\n      }\n\n      if (!valid) return;\n\n      // 4. description дублируем из названия голоса, только если voice выбран и описание пустое\n      if (hasVoice && !form.voiceDescription.value.trim()) {\n        form.voiceDescription.value = form.voiceName.value.trim();\n      }\n\n      submitBtn.setAttribute('aria-busy', 'true');\n      submitBtn.disabled = true;\n\n      try {\n        const res = await fetch(form.action, {\n          method: 'POST',\n          body: new FormData(form),\n        });\n        if (!res.ok) throw new Error('HTTP ' + res.status);\n\n        form.style.display = 'none';\n        successEl.style.display = 'block';\n      } catch (err) {\n        submitBtn.removeAttribute('aria-busy');\n        submitBtn.disabled = false;\n        formError.textContent = 'Ошибка отправки: ' + err.message + '. Попробуйте ещё раз.';\n        formError.style.display = 'block';\n      }\n    });\n    </script>\n  </body>\n</html>`;\n\nreturn [{ json: { html } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        -448
+      ],
+      "id": "4f0baf16-a71c-4279-8bf3-534fd4afa33b",
+      "name": "Generate Source WebForm"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        192,
+        -448
+      ],
+      "id": "f797dce8-97df-4768-b738-60a3f1d2fa63",
+      "name": "Respond to Load Source Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "loading-resources-webform_submit",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -320,
+        528
+      ],
+      "id": "c0ba6fe1-9ef8-47ec-897d-1621fc84e1f8",
+      "name": "Load Source Webhook"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $input.item.binary?.avatar}}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "469e36b7-e70c-41e1-8c6a-045e80f5ae0b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "avatar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b83e59cb-dee8-478b-8d49-facd697ca933",
+                    "leftValue": "={{ $input.item.binary?.voice}}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "voice"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -112,
+        528
+      ],
+      "id": "504be5bb-f47f-42e9-b58e-11b5420426bf",
+      "name": "What was uploaded"
+    },
+    {
+      "parameters": {
+        "path": "loading-resources-webform",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -240,
+        -448
+      ],
+      "id": "2a26b89a-877f-4705-a12e-ebaae36829a2",
+      "name": "Get WebForm Uploading Resources"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={\n  \"message\": \"{{ $json.details.message }}\",\n  \"nodeName\": \"{{ $prevNode.name }}\",\n  \"errorType\": \"http_error\",\n  \"errorCode\": \"{{ $json.error.code }}\"\n}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        96,
+        320
+      ],
+      "id": "cb0b202f-1425-4bdb-a67f-c1821f2cf0e4",
+      "name": "Stop and Error13"
+    },
+    {
+      "parameters": {
+        "content": "# Создаем форму для загрузки исходников для Аватара \n",
+        "height": 256,
+        "width": 896,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -544
+      ],
+      "id": "b8aa5b0e-4c33-4c63-9fea-c2e2ca1ecad9",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# Создаем Аватар \n",
+        "height": 720,
+        "width": 2048,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -240
+      ],
+      "id": "067d5726-f32e-46d2-b148-7ae14e125ed2",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Создаем Клон голоса\n",
+        "height": 512,
+        "width": 2048,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        688
+      ],
+      "id": "9df7268c-332a-4662-afe1-9f3e2f5fab42",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "# Создаем форму для загрузки текста|темы и выбора Аватара|Голоса \n",
+        "height": 256,
+        "width": 896
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        1472
+      ],
+      "id": "2f5c7568-e380-4ced-9296-91798f5c8abc",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "# Создаем ролик с выбранным Аватаром и Голосом \n",
+        "height": 880,
+        "width": 3968
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        1776
+      ],
+      "id": "5e27021f-17f0-47e9-8bdb-fd8bb614d096",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={\n  \"message\": \"Ошибка создания Аватара\",\n  \"nodeName\": \"{{ $prevNode.name }}\",\n  \"errorType\": \"http_error\"\n}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        320,
+        320
+      ],
+      "id": "89b2e30c-d804-4bfd-ae74-da8f518f5c93",
+      "name": "Stop and Error14"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fc635799-e9d9-47c7-9ca1-7bbcdb717aa0",
+              "name": "data",
+              "value": "={ id: {{ $json.data.avatar_item.id }},\nstatus: {{ $json.data.avatar_item.status }}}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        48
+      ],
+      "id": "83937fd0-b783-4591-adf3-bd6521e8f40e",
+      "name": "Format Data"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={\n  \"message\": \"{{ $json.error.message }}\",\n  \"nodeName\": \"{{ $prevNode.name }}\",\n  \"errorType\": \"http_error\",\n  \"errorCode\": \"{{ $json.error.code }}\"\n}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        3040,
+        1904
+      ],
+      "id": "47bd6b58-d536-4b38-8784-0feb564bd0fd",
+      "name": "Stop and Error15"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "669a6ae1-953b-4a9f-ada0-21af27624b5e",
+              "name": "data",
+              "value": "={id: \"{{  $json.data.video_id  }}\"}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2320,
+        2128
+      ],
+      "id": "578e9807-99b0-4445-897c-374a0b36d7df",
+      "name": "Format Video Id"
+    }
+  ],
+  "connections": {
+    "Voice Clon": {
+      "main": [
+        [
+          {
+            "node": "Test Voice Clon",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an avatar": {
+      "main": [
+        [
+          {
+            "node": "Format Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error14",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avatar Test": {
+      "main": [
+        [
+          {
+            "node": "Avatar is ready",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Avatar Test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Photo": {
+      "main": [
+        [
+          {
+            "node": "Create an avatar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Test Voice Clon",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test Voice Clon": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avatar is ready": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Avatar isn’t BD",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Stop and Error7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Voice Clon isn’t BD",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avatar isn’t BD": {
+      "main": [
+        [
+          {
+            "node": "Save Avatar to BD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Voice Clon isn’t BD": {
+      "main": [
+        [
+          {
+            "node": "Save Voice Clon to BD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get WebForm Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get rows from BD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get rows from BD": {
+      "main": [
+        [
+          {
+            "node": "Generate WebForm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate WebForm": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit WebForm Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Voice & Avatar from BD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Webhook Data": {
+      "main": [
+        [
+          {
+            "node": "Response By AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Response By AI": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Format AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format AI Output": {
+      "main": [
+        [
+          {
+            "node": "Prepare Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Data": {
+      "main": [
+        [
+          {
+            "node": "TTS by Voice Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTS by Voice Id": {
+      "main": [
+        [
+          {
+            "node": "Upload TTS to S3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare BD Rows": {
+      "main": [
+        [
+          {
+            "node": "Set Webhook Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Voice & Avatar from BD": {
+      "main": [
+        [
+          {
+            "node": "Prepare BD Rows",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload TTS to S3": {
+      "main": [
+        [
+          {
+            "node": "S3 Preset JSON Keys",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "S3 Preset JSON Keys": {
+      "main": [
+        [
+          {
+            "node": "Get S3 Download Url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get S3 Download Url": {
+      "main": [
+        [
+          {
+            "node": "Create a video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a video": {
+      "main": [
+        [
+          {
+            "node": "Format Video Id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a video": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Stop and Error15",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Get a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Video": {
+      "main": [
+        [
+          {
+            "node": "Send a video",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a video": {
+      "main": [
+        []
+      ]
+    },
+    "Generate Source WebForm": {
+      "main": [
+        [
+          {
+            "node": "Respond to Load Source Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Source Webhook": {
+      "main": [
+        [
+          {
+            "node": "What was uploaded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get WebForm Uploading Resources": {
+      "main": [
+        [
+          {
+            "node": "Generate Source WebForm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "What was uploaded": {
+      "main": [
+        [
+          {
+            "node": "Upload Photo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Voice Clon",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Data": {
+      "main": [
+        [
+          {
+            "node": "Avatar Test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Video Id": {
+      "main": [
+        [
+          {
+            "node": "Get a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true,
+    "errorWorkflow": "64NkY4sRbZuOaAjD"
+  }
+}
