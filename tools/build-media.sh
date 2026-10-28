@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Готовит медиа для сайта из исходников в «Кейсы/» (в git не идут).
+# Готовит медиа для сайта из исходников в «Кейсы/» и «Курсы/» (в git не идут).
 # PNG → WebP (полный размер + превью), webm → mp4 + постер, копия PDF и md.
 # Персональные данные на скринах замазываются здесь же (blur по координатам).
 # Запуск из корня сайта: bash tools/build-media.sh
@@ -98,5 +98,16 @@ grep -o 'frame_[0-9_]*\.png' "$D"*"(визуал).md" | sort -u | while read -r 
   echo "  $O/frames/${f%.png}.webp"
 done
 
+echo "certificates"
+# папка в «Курсы/» → slug направления на сайте; новое направление — новая строка
+declare -A CERT_DIRS=([Js]=js)
+for dir in "${!CERT_DIRS[@]}"; do
+  for f in "Курсы/$dir"/*.{jpg,jpeg,png}; do
+    [ -e "$f" ] || continue
+    name=$(basename "${f%.*}")
+    webp "$f" "certificates/${CERT_DIRS[$dir]}/$name" "$FULL_W"
+  done
+done
+
 echo "done"
-du -sh "$OUT"
+du -sh "$OUT" certificates

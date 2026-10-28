@@ -165,6 +165,29 @@ function renderGallery(items) {
   return h('div', {}, grid, more);
 }
 
+/* ---------- сертификаты ---------- */
+
+function renderCertificates(groups = []) {
+  const section = document.querySelector('#certificates');
+  const box = section?.querySelector('[data-slot="certificates"]');
+  if (!box) return;
+  section.hidden = !groups.length;
+  const slides = groups.flatMap((g) => g.items.map((c) => ({ src: url(`${c.src}.webp`), caption: c.title })));
+  let index = 0;
+  box.replaceChildren(...groups.map((g) =>
+    h('div.certs__group', {},
+      h('h3.certs__title', {}, g.group),
+      h('div.certs', {}, g.items.map((c) => {
+        const i = index++;
+        return h('button.cert', { type: 'button', onclick: () => openLightbox(slides, i) },
+          h('img.cert__img', { src: url(`${c.src}-thumb.webp`), alt: c.title, loading: 'lazy' }),
+          h('span.cert__body', {},
+            h('span.cert__title', {}, c.title),
+            h('span.cert__meta', {}, c.issuer),
+            h('span.cert__meta', {}, c.period)));
+      })))));
+}
+
 /* ---------- диалоги ---------- */
 
 const lightbox = { slides: [], index: 0 };
@@ -290,6 +313,7 @@ async function init() {
   initTheme();
   const data = await fetch(url('data/cases.json')).then((r) => r.json());
   renderProfile(data.profile);
+  renderCertificates(data.certificates);
   document.querySelector('[data-slot="cards"]')?.replaceChildren(...data.cases.map(renderCard));
   const details = data.cases.map((c, i) => [c, i]).filter(([c]) => !only || only.includes(c.slug));
   document.querySelector('[data-slot="cases"]')?.replaceChildren(...details.map(([c, i]) => renderCase(c, i)));

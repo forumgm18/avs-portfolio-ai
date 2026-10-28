@@ -682,5 +682,24 @@
         ]
       }
     }
+  ],
+  "certificates": [
+    {
+      "group": "JavaScript",
+      "items": [
+        {
+          "src": "certificates/js/certificate-2",
+          "title": "Курс JavaScript/DOM/Интерфейсы для программистов",
+          "issuer": "javascript.ru · Илья Кантор",
+          "period": "февраль — апрель 2023"
+        },
+        {
+          "src": "certificates/js/certificate",
+          "title": "Курс JavaScript/DOM/Интерфейсы для новичков",
+          "issuer": "javascript.ru · Илья Кантор",
+          "period": "декабрь 2022 — январь 2023"
+        }
+      ]
+    }
   ]
 }
