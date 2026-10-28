@@ -19,6 +19,10 @@
     [/memory/i, 'MEM', 'model'],
     [/outputParser/i, 'JSON', 'model'],
     [/postgres/i, 'SQL', 'data'],
+    [/redis/i, 'REDIS', 'data'],
+    [/amocrm/i, 'CRM', 'api'],
+    [/executeWorkflow|toolWorkflow/i, 'FLOW', 'logic'],
+    [/noOp/i, 'END', 'logic'],
     [/dataTable/i, 'TABLE', 'data'],
     [/s3/i, 'S3', 'data'],
     [/heygen/i, 'VIDEO', 'api'],
@@ -35,7 +39,7 @@
     return k ? { label: k[1], cat: k[2] } : { label: type.split('.').pop().slice(0, 4).toUpperCase(), cat: 'logic' };
   };
 
-  const isSub = (n) => /lmChat|memory|outputParser|Tool$|embeddings|vectorStore/i.test(n.type)
+  const isSub = (n) => /lmChat|memory|outputParser|Tool$|toolWorkflow|embeddings|vectorStore/i.test(n.type)
     && !/\.agent$/.test(n.type);
 
   const el = (tag, attrs = {}, text) => {

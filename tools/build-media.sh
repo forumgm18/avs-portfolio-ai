@@ -69,6 +69,22 @@ ffmpeg -loglevel error -y -i "$D/P1___Video.webm" -c:v libx264 -crf 24 -preset s
 ffmpeg -loglevel error -y -ss 1 -i "$D/P1___Video.webm" -frames:v 1 -vf "scale=720:-2" "$O/poster.png"
 magick "$O/poster.png" -quality 80 "$O/poster.webp" && rm "$O/poster.png"
 
+echo "ai-seller-crm"
+D="$SRC/AI-агент продавец с Интеграция с CRM"; O="$OUT/ai-seller-crm"
+webp "$D/worlflow.png" "$O/workflow" "$WIDE_W"
+webp "$D/wf-create_lead_amoCRM.png" "$O/workflow-create-lead" "$WIDE_W"
+for n in 1 2 3 4 5 6 7 8; do
+  webp "$D/c$n.png" "$O/c$n-chat" "$FULL_W"
+done
+webp "$D/c6_warning.png" "$O/c6-manager" "$FULL_W"
+# домен self-hosted n8n в журнале событий amoCRM
+webp "$D/c1_amoCRM.png" "$O/c1-crm" "$WIDE_W" "150x84+1628+264"
+webp "$D/c2_amoCRM.png" "$O/c2-crm" "$WIDE_W" "150x84+1638+279"
+webp "$D/c3_amoCRM.png" "$O/c3-crm" "$WIDE_W"
+webp "$D/c4_amoCRM.png" "$O/c4-crm" "$WIDE_W" "150x86+1550+264"
+webp "$D/c5_amoCRM.png" "$O/c5-crm" "$WIDE_W"
+webp "$D/c7_amoCRM.png" "$O/c7-crm" "$WIDE_W" "150x86+1550+415"
+
 echo "speech-to-text"
 D=$(echo "$SRC/Транскрибатор видео и аудио в конспект (speech-to-text)"/*/); O="$OUT/speech-to-text"
 mkdir -p "$O/frames"

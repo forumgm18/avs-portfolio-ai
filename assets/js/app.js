@@ -72,7 +72,8 @@ function renderProfile(p) {
 /* ---------- кейсы ---------- */
 
 function renderCard(c, i) {
-  const cover = c.evidence.workflow?.image.replace('.webp', '-thumb.webp')
+  const wf = [].concat(c.evidence.workflow ?? [])[0];
+  const cover = wf?.image.replace('.webp', '-thumb.webp')
     ?? `${c.evidence.gallery[0].src}-thumb.webp`;
   return h('a.card', { href: `#case-${c.slug}` },
     h('div.card__cover', {}, h('img', { src: url(cover), alt: '', loading: 'lazy' })),
@@ -108,7 +109,7 @@ function renderCase(c, i) {
         section('Стек', h('ul.chips', {}, c.stack.map((s) => h('li.chip', {}, s))))),
       h('div.case__evidence', {},
         h('h4.case__label', {}, 'Доказательства'),
-        ev.workflow && renderWorkflow(ev.workflow, c.title),
+        [].concat(ev.workflow ?? []).map((wf) => renderWorkflow(wf, c.title)),
         ev.video && renderVideo(ev.video),
         ev.documents && renderDocuments(ev.documents),
         ev.markdown && renderMarkdownLinks(ev.markdown, ev.source),

@@ -1,0 +1,656 @@
+{
+  "name": "create_lead_amoCRM",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "NAME"
+            },
+            {
+              "name": "PHONE"
+            },
+            {
+              "name": "ORDER"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -624,
+        448
+      ],
+      "id": "be72ab91-61e1-422a-9f3c-b0a7b75b74f6",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "af0cac11-568b-4186-b9cb-cd1195b8b73f",
+              "leftValue": "={{ $json._embedded?.contacts?.[0]?.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        192,
+        208
+      ],
+      "id": "bfe6ea82-4f63-4254-97a0-56b19dae38d1",
+      "name": "Телефон есть в базе"
+    },
+    {
+      "parameters": {
+        "authentication": "longLivedToken",
+        "resource": "contacts",
+        "returnAll": true,
+        "filter": {
+          "query": "={{ $json.PHONE_QUERY }}"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-amocrm.amocrm",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        320
+      ],
+      "id": "ec501aed-9fa0-4ff0-be58-c7388967a8ae",
+      "name": "Ищем телефон в базе",
+      "credentials": {
+        "amocrmLongLivedApi": {
+          "id": "",
+          "name": "amocrmLongLivedApi"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "authentication": "longLivedToken",
+        "resource": "contacts",
+        "operation": "createContacts",
+        "collection": {
+          "contact": [
+            {
+              "name": "={{ $('Normalize Input Data').item.json.NAME }}",
+              "custom_fields_values": {
+                "custom_field": [
+                  {
+                    "data": "{\"id\":1088197,\"type\":\"multitext\"}",
+                    "value": "={{ $('Normalize Input Data').item.json.PHONE }}"
+                  },
+                  {
+                    "data": "{\"id\":1089103,\"type\":\"text\"}",
+                    "value": "=7{{ $('Normalize Input Data').item.json.PHONE_QUERY }}"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-amocrm.amocrm",
+      "typeVersion": 1,
+      "position": [
+        400,
+        224
+      ],
+      "id": "f0a96fee-b63a-4a44-9669-8d9a3a243e3c",
+      "name": "Create new contacts",
+      "credentials": {
+        "amocrmLongLivedApi": {
+          "id": "",
+          "name": "amocrmLongLivedApi"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "124f9494-9b4d-4ff5-aee1-00bb43a9384f",
+              "name": "contactId",
+              "value": "={{ $json._embedded?.contacts[0]?.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        592,
+        144
+      ],
+      "id": "7abd16ab-032f-4c87-a5b7-ef157dd139d5",
+      "name": "ID Нового контакта"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "124f9494-9b4d-4ff5-aee1-00bb43a9384f",
+              "name": "contactId",
+              "value": "={{ $json._embedded?.contacts[0]?.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        592,
+        -16
+      ],
+      "id": "19f10bf9-e392-4d35-9904-4b0c11ec5a0a",
+      "name": "ID старого контакта"
+    },
+    {
+      "parameters": {
+        "authentication": "longLivedToken",
+        "resource": "leads",
+        "operation": "createLeads",
+        "collection": {
+          "lead": [
+            {
+              "name": "={{ $('Normalize Input Data').item.json.AI_TITLE }}",
+              "status_id": 88345546,
+              "custom_fields_values": {
+                "custom_field": [
+                  {
+                    "data": "{\"id\":1089567,\"type\":\"textarea\"}",
+                    "value": "={{ $('Normalize Input Data').item.json.ORDER }}"
+                  }
+                ]
+              },
+              "_embedded": {
+                "contacts": [
+                  {
+                    "id": {
+                      "contact": [
+                        {
+                          "id": "={{ $json.contactId }}"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-amocrm.amocrm",
+      "typeVersion": 1,
+      "position": [
+        800,
+        144
+      ],
+      "id": "0fa88bdc-cbc1-4d21-8b95-5e51d7d04351",
+      "name": "Create new leads",
+      "credentials": {
+        "amocrmLongLivedApi": {
+          "id": "",
+          "name": "amocrmLongLivedApi"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2e25b058-5da4-46b6-a124-a17abb27d275",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "eff6b73f-ecde-409a-8cbe-630fc22cf69f",
+              "name": "statusMessage",
+              "value": "Успешное выполнение",
+              "type": "string"
+            },
+            {
+              "id": "cacb163c-0390-4525-9773-dfdd6e3e0fee",
+              "name": "leadId",
+              "value": "={{ $json._embedded?.leads[0]?.id }}",
+              "type": "number"
+            },
+            {
+              "id": "30afeefa-307f-423b-b5e1-b138299ff9fb",
+              "name": "errorType",
+              "value": "={{null}}",
+              "type": "object"
+            },
+            {
+              "id": "63e4990f-7f74-4e42-bf2b-3c17a7bf1e2f",
+              "name": "formattedPhone",
+              "value": "={{ $('Normalize Input Data').item.json.PHONE }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1072,
+        128
+      ],
+      "id": "4ff8eaec-f775-4115-a551-ce6cdb0045b7",
+      "name": "Успешное выполнение"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "366a7f21-ee93-40f9-b0ab-14480eb3cedc",
+              "name": "NAME",
+              "value": "={{ $json.NAME ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "9cde0f8d-72bc-4e0f-a29c-452a5c38da6c",
+              "name": "PHONE",
+              "value": "={{String($json.PHONE ?? '').replace(/\\D/g, '').slice(-10)\n    .replace(/(\\d{3})(\\d{3})(\\d{2})(\\d{2})/, '+7 ($1) $2-$3-$4')  }}",
+              "type": "string"
+            },
+            {
+              "id": "95c345d4-aaa5-442b-87a0-6999b36fdc1e",
+              "name": "ORDER",
+              "value": "={{ $json.ORDER ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "2989e931-d695-410a-910a-8285db3152e2",
+              "name": "PHONE_QUERY",
+              "value": "={{ String($json.PHONE ?? '').replace(/\\D/g, '').slice(-10) }}",
+              "type": "string"
+            },
+            {
+              "id": "1ef30656-5386-4bfd-a7a7-dfb4a6f6a5c6",
+              "name": "AI_TITLE",
+              "value": "Заявка от ИИ-Агента",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -432,
+        448
+      ],
+      "id": "45350187-db02-4a16-8eab-b330c80054fc",
+      "name": "Normalize Input Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "db81d8d5-c8e5-4dea-b546-3b28b4685720",
+              "leftValue": "={{ $json.NAME?.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "76065b2a-e2c7-4df1-9ab1-fa7cca6814fe",
+              "leftValue": "={{ $json.PHONE_QUERY?.length }}",
+              "rightValue": 10,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "8a7056c1-bcdc-45a4-b542-804a695715fc",
+              "leftValue": "={{ $json.ORDER?.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -224,
+        448
+      ],
+      "id": "6dfc50e9-7893-4abe-9fa0-a704b1c00c0a",
+      "name": "Check Input Data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2e25b058-5da4-46b6-a124-a17abb27d275",
+              "name": "status",
+              "value": "error",
+              "type": "string"
+            },
+            {
+              "id": "eff6b73f-ecde-409a-8cbe-630fc22cf69f",
+              "name": "statusMessage",
+              "value": "Не хватает данных для заявки или телефон в неверном формате",
+              "type": "string"
+            },
+            {
+              "id": "cacb163c-0390-4525-9773-dfdd6e3e0fee",
+              "name": "leadId",
+              "value": "={{null}}",
+              "type": "object"
+            },
+            {
+              "id": "07616825-6225-49d3-b3e6-d422900142e1",
+              "name": "errorType",
+              "value": "validation",
+              "type": "string"
+            },
+            {
+              "id": "3f9c3054-0fec-48c2-a1dd-aceabfa826be",
+              "name": "formattedPhone",
+              "value": "={{ $('Normalize Input Data').item.json.PHONE }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1072,
+        512
+      ],
+      "id": "bf75cc00-2235-4174-b350-ef347b977da9",
+      "name": "Ошибка валидации"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2e25b058-5da4-46b6-a124-a17abb27d275",
+              "name": "status",
+              "value": "error",
+              "type": "string"
+            },
+            {
+              "id": "eff6b73f-ecde-409a-8cbe-630fc22cf69f",
+              "name": "statusMessage",
+              "value": "Не удалось оформить заявку в CRM. Менеджер свяжется с клиентом.",
+              "type": "string"
+            },
+            {
+              "id": "cacb163c-0390-4525-9773-dfdd6e3e0fee",
+              "name": "leadId",
+              "value": "={{null}}",
+              "type": "object"
+            },
+            {
+              "id": "07616825-6225-49d3-b3e6-d422900142e1",
+              "name": "errorType",
+              "value": "amocrm_api",
+              "type": "string"
+            },
+            {
+              "id": "893b90c5-b38b-4bae-bc34-6d4abcfe97bd",
+              "name": "formattedPhone",
+              "value": "={{ $('Normalize Input Data').item.json.PHONE }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1072,
+        320
+      ],
+      "id": "3b012da4-0d16-4a02-9c80-873a9f7cb905",
+      "name": "Ошибка CRM"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        320
+      ],
+      "id": "564a9e0c-c6dc-4426-9329-819c5d3f65da",
+      "name": "Ответ агенту"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ищем телефон в базе": {
+      "main": [
+        [
+          {
+            "node": "Телефон есть в базе",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ошибка CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Телефон есть в базе": {
+      "main": [
+        [
+          {
+            "node": "ID старого контакта",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create new contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create new contacts": {
+      "main": [
+        [
+          {
+            "node": "ID Нового контакта",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ошибка CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ID Нового контакта": {
+      "main": [
+        [
+          {
+            "node": "Create new leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ID старого контакта": {
+      "main": [
+        [
+          {
+            "node": "Create new leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create new leads": {
+      "main": [
+        [
+          {
+            "node": "Успешное выполнение",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ошибка CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input Data": {
+      "main": [
+        [
+          {
+            "node": "Check Input Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Input Data": {
+      "main": [
+        [
+          {
+            "node": "Ищем телефон в базе",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ошибка валидации",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ошибка CRM": {
+      "main": [
+        [
+          {
+            "node": "Ответ агенту",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Успешное выполнение": {
+      "main": [
+        [
+          {
+            "node": "Ответ агенту",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ошибка валидации": {
+      "main": [
+        [
+          {
+            "node": "Ответ агенту",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}
